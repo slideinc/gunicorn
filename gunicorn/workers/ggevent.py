@@ -34,7 +34,13 @@ class GEventWorker(AsyncWorker):
         try:
             while self.alive:
                 self.notify()
-            
+                
+                if self.cfg.max_connections > 0:
+                    if self.num_conns > self.cfg.max_connections:
+                        self.log.info("Exceeded connection limit. Restarting.")
+                        gevent.kill(acceptor)
+                        break
+
                 if self.ppid != os.getppid():
                     self.log.info("Parent changed, shutting down: %s" % self)
                     gevent.kill(acceptor)
@@ -43,7 +49,6 @@ class GEventWorker(AsyncWorker):
             pool.join(timeout=self.timeout)
         except KeyboardInterrupt:
             pass
-        os._exit(3)
 
     def acceptor(self, pool):
         gevent.getcurrent()

@@ -26,6 +26,7 @@ class AsyncWorker(base.Worker):
         raise NotImplementedError()
 
     def handle(self, client, addr):
+        self.num_conns += 1
         try:
             parser = http.RequestParser(client)
             try:

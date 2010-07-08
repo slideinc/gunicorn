@@ -16,6 +16,10 @@ import gunicorn
 from gunicorn.workers.base import Worker
 
 class WSGIHandler(wsgi.WSGIHandler):
+    def handle(self, server):
+        server.num_conns += 1
+        super(WSGIHandler, self).handle(server)
+
     def log_request(self, *args):
         pass
 
@@ -70,6 +74,12 @@ class GEvent2Worker(Worker):
         try:
             while self.alive:
                 self.notify()
+                
+                if self.cfg.max_connections > 0:
+                    if self.num_conns > self.cfg.max_connections:
+                        self.log.info("Exceeded connection limit. Restarting.")
+                        gevent.kill(acceptor)
+                        break
             
                 if self.ppid != os.getppid():
                     self.log.info("Parent changed, shutting down: %s" % self)

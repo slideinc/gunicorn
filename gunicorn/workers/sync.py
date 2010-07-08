@@ -28,6 +28,12 @@ class SyncWorker(base.Worker):
             self.nr = 0
             self.notify()
             
+            # If we handle more than max_connections we restart ourselves.
+            if self.cfg.max_connections > 0:
+                if self.num_conns > self.cfg.max_connections:
+                    self.log.info("Exceeded connection limit. Restarting.")
+                    return
+            
             # Accept a connection. If we get an error telling us
             # that no connection is waiting we fall down to the
             # select which is where we'll wait for a bit for new
@@ -52,7 +58,7 @@ class SyncWorker(base.Worker):
             if self.ppid != os.getppid():
                 self.log.info("Parent changed, shutting down: %s" % self)
                 return
-            
+
             try:
                 self.notify()
                 ret = select.select([self.socket], [], self.PIPE, self.timeout)
@@ -69,6 +75,7 @@ class SyncWorker(base.Worker):
                 raise
         
     def handle(self, client, addr):
+        self.num_conns += 1
         try:
             parser = http.RequestParser(client)
             req = parser.next()

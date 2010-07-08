@@ -42,7 +42,13 @@ class EventletWorker(AsyncWorker):
         
         while self.alive:
             self.notify()
-            
+
+            if self.cfg.max_connections > 0:
+                if self.num_conns > self.cfg.max_connections:
+                    self.log.info("Exceeded connection limit. Restarting.")
+                    greenthread.kill(acceptor, eventlet.StopServe)
+                    break
+
             if self.ppid != os.getppid():
                 self.log.info("Parent changed, shutting down: %s" % self)
                 greenthread.kill(acceptor, eventlet.StopServe)
@@ -52,7 +58,6 @@ class EventletWorker(AsyncWorker):
 
         with eventlet.Timeout(self.timeout, False):
             pool.waitall()
-        os._exit(3)
 
     def acceptor(self, pool):
         greenthread.getcurrent()

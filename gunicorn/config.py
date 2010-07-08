@@ -309,9 +309,28 @@ class WorkerConnections(Setting):
     type = "int"
     default = 1000
     desc = """\
-        The maximum number of simultaneous clients.
+        The maximum number of simultaneous clients per worker (async only).
         
         This setting only affects the Eventlet and Gevent worker types.
+        """
+
+class MaxConnections(Setting):
+    name = "max_connections"
+    section = "Worker Processes"
+    cli = ["--max-connections"]
+    meta = "INT"
+    validator = validate_pos_int
+    type = "int"
+    default = 0
+    desc = """\
+        Limits workers to MAX_CONNECTIONS clients before restarting.
+
+        After a worker handles MAX_CONNECTIONSS number of socket
+        connections it will shut itself down so that the master
+        process restarts it. This is a simplistic approach at
+        containing memory leaks and other unknown error conditions.
+
+        If set to 0 (the default), workers will not restart automatically.
         """
 
 class Timeout(Setting):

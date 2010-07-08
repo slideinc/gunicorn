@@ -37,6 +37,7 @@ class Worker(object):
 
         self.nr = 0
         self.alive = True
+        self.num_conns = 0
         self.spinner = 0
         self.log = logging.getLogger(__name__)
         self.debug = cfg.debug
