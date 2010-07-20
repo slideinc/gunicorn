@@ -57,6 +57,7 @@ setup(
     gevent_wsgi=gunicorn.workers.ggevent:GeventWSGIWorker
     gevent_pywsgi=gunicorn.workers.ggevent:GeventPyWSGIWorker
     tornado=gunicorn.workers.gtornado:TornadoWorker
+    gogreen=gunicorn.workers.ggogreen:GogreenWorker
 
     [paste.server_runner]
     main=gunicorn.app.pasterapp:paste_server
