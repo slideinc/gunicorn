@@ -3,6 +3,8 @@
 # This file is part of gunicorn released under the MIT license.
 # See the NOTICE for more information.
 
+import contextlib
+
 from gogreen import coro
 
 coro.socket_emulate()
@@ -16,10 +18,9 @@ class GogreenWorker(AsyncWorker):
         acceptor.start()
         coro.event_loop()
 
+    @contextlib.contextmanager
     def timeout_ctx(self):
-        timer = TimerThread(args=(self, self.cfg.keepalive))
-        timer.start()
-        return timer
+        yield
 
 
 class NotifierThread(coro.Thread):
@@ -45,19 +46,3 @@ class AcceptorThread(coro.Thread):
             conn, address = worker.socket.accept()
             handler = HandlerThread(args=(worker, conn, address))
             handler.start()
-
-
-class TimerThread(coro.Thread):
-    def run(self, worker, seconds):
-        self._cancelled = False
-
-        self.Yield(seconds)
-
-        if not self._cancelled:
-            worker.timeout()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, klass, value, tb):
-        self._cancelled = True
